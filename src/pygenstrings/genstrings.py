@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,6 +9,9 @@ from typing import *
 import chardet
 
 from .parser import parse
+
+
+PathFilter = Callable[[os.DirEntry], bool]
 
 
 @dataclass(frozen=True, eq=True)
@@ -21,7 +25,7 @@ class LocalizableStrings:
     strings: Dict[str, LocalizableString]
 
     @classmethod
-    def from_source(cls, source: str):
+    def from_source(cls, source: str) -> LocalizableStrings:
         return cls(
             {
                 key: LocalizableString(string=value, comment=comment)
@@ -44,12 +48,13 @@ def read_file(path: Path) -> Union[str, None]:
         data = fobj.read()
     candidates = ["utf-8"]
     encoding = chardet.detect(data)["encoding"]
-    if encoding:
+    if encoding is not None:
         candidates.append(encoding)
     candidates.append("utf-16-le")
     for candidate in candidates:
         try:
-            return data.decode(candidate)
+            s: str = data.decode(candidate)
+            return s
         except UnicodeDecodeError:
             continue
     return None
@@ -62,26 +67,24 @@ def read_strings(path: Path) -> LocalizableStrings:
     return LocalizableStrings.from_source(source)
 
 
-def scantree(
-    path: os.PathLike, path_filter: Callable[[os.DirEntry], bool]
-) -> Iterable[Path]:
+def scantree(path: os.PathLike, path_filter: PathFilter) -> Iterable[str]:
     for entry in os.scandir(path):
         if not path_filter(entry):
             continue
         if entry.is_file() and entry.name.endswith((".m", ".mm", ".swift")):
             yield entry.path
         elif entry.is_dir():
-            yield from scantree(entry.path, path_filter)
+            yield from scantree(Path(entry.path), path_filter)
 
 
 def generate_strings(
-    src: Path, path_filter: Optional[Callable[[os.DirEntry], bool]] = None
+    src: Path, path_filter: Optional[PathFilter] = None
 ) -> LocalizableStrings:
+    if path_filter is None:
+        path_filter = lambda p: True
     with TemporaryDirectory() as workspace:
         for entry in scantree(src, path_filter):
-            check_call(
-                ["genstrings", "-a", "-littleEndian", "-o", workspace, str(entry)]
-            )
+            check_call(["genstrings", "-a", "-littleEndian", "-o", workspace, entry])
         return read_strings(Path(workspace) / "Localizable.strings")
 
 

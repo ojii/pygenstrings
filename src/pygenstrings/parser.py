@@ -25,7 +25,7 @@ class LineParseError(Exception):
 def parse_line(line: str) -> Tuple[str, str]:
     lines = iter([line.encode("utf-8")])
 
-    def rdln(size=-1):
+    def rdln(size: int = -1) -> bytes:
         try:
             return next(lines)
         except StopIteration:
@@ -33,7 +33,7 @@ def parse_line(line: str) -> Tuple[str, str]:
 
     tokens = list(tokenize.tokenize(rdln))
     if len(tokens) != 7:
-        raise LineParseError(f"Wrong number of tokens: {len(tokens)}, {tokens}" )
+        raise LineParseError(f"Wrong number of tokens: {len(tokens)}, {tokens}")
     encoding, key, eq, value, semi, newline, endmarker = tokens
     if encoding.type != tokenize.ENCODING:
         raise LineParseError("No encoding token")

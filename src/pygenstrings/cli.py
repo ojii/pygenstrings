@@ -5,10 +5,15 @@ from typing import *
 
 import click
 
-from pygenstrings.genstrings import generate_strings, read_strings, merge_strings
+from pygenstrings.genstrings import (
+    generate_strings,
+    read_strings,
+    merge_strings,
+    PathFilter,
+)
 
 
-def make_filter(exclude: List[str]) -> Callable[[os.DirEntry], bool]:
+def make_filter(exclude: List[str]) -> PathFilter:
     def fltr(entry: os.DirEntry) -> bool:
         for pat in exclude:
             if fnmatch.fnmatch(entry.path, f"*{pat}"):
@@ -28,7 +33,8 @@ def find_translations(path: Path, langs: Iterable[str]) -> Iterable[Path]:
 @click.argument("dst", type=click.Path())
 @click.argument("langs", nargs=-1)
 @click.option("-e", "--exclude", multiple=True)
-def main(src: str, dst: str, langs: List[str], exclude: List[str]):
+def main(src: str, dst: str, langs: List[str], exclude: List[str]) -> None:
+    path_filter: Optional[PathFilter]
     if exclude:
         path_filter = make_filter(exclude)
     else:
@@ -36,7 +42,6 @@ def main(src: str, dst: str, langs: List[str], exclude: List[str]):
     strings = generate_strings(Path(src), path_filter)
     for path in find_translations(Path(dst), langs):
         translation = read_strings(path)
-        print(path, translation)
         result = merge_strings(strings, translation)
-        with path.open('w', encoding='utf-8') as fobj:
+        with path.open("w", encoding="utf-8") as fobj:
             fobj.write(result.to_source())

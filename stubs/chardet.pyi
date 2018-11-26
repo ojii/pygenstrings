@@ -1,0 +1,3 @@
+from typing import *
+
+def detect(byte_str: ByteString) -> Dict[str, str]: ...

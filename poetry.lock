@@ -15,7 +15,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "7.0"
 
 [metadata]
-content-hash = "ec97ffec354e9982fe5d944d3dc52b930a502574a000cbe109585d99529b5d12"
+content-hash = "b6948c87c66a2dc42ce3ef0b073c0226f50bf9d1b3ee8b061fe2dee790aa7f62"
 python-versions = "^3.7"
 
 [metadata.hashes]
