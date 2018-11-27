@@ -8,6 +8,7 @@ authors = ["Jonas Obrist <jonas.obrist@hde.co.jp>"]
 python = "^3.7"
 click = "^7.0"
 chardet = "^3.0"
+toml = "^0.10.0"
 
 [tool.poetry.scripts]
 pygenstrings = "pygenstrings.cli:main"

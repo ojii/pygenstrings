@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,7 +10,6 @@ from typing import *
 import chardet
 
 from .parser import parse
-
 
 PathFilter = Callable[[os.DirEntry], bool]
 
@@ -35,10 +35,10 @@ class LocalizableStrings:
 
     def to_source(self) -> str:
         lines = []
-        for key, lstring in sorted(self.strings.items()):
-            if lstring.comment:
-                lines.append(f"/* {lstring.comment} */")
-            lines.append(f"{key} = {lstring.string};")
+        for key, localized_string in sorted(self.strings.items()):
+            if localized_string.comment:
+                lines.append(f"/* {localized_string.comment} */")
+            lines.append(f"{key} = {localized_string.string};")
             lines.append("")
         return "\n".join(lines)
 
@@ -67,24 +67,25 @@ def read_strings(path: Path) -> LocalizableStrings:
     return LocalizableStrings.from_source(source)
 
 
-def scantree(path: os.PathLike, path_filter: PathFilter) -> Iterable[str]:
+def scan_tree(path: Path, path_filter: PathFilter) -> Iterable[str]:
     for entry in os.scandir(path):
         if not path_filter(entry):
             continue
         if entry.is_file() and entry.name.endswith((".m", ".mm", ".swift")):
             yield entry.path
         elif entry.is_dir():
-            yield from scantree(Path(entry.path), path_filter)
+            yield from scan_tree(Path(entry.path), path_filter)
 
 
 def generate_strings(
-    src: Path, path_filter: Optional[PathFilter] = None
+    sources: List[Path], path_filter: PathFilter
 ) -> LocalizableStrings:
-    if path_filter is None:
-        path_filter = lambda p: True
     with TemporaryDirectory() as workspace:
-        for entry in scantree(src, path_filter):
-            check_call(["genstrings", "-a", "-littleEndian", "-o", workspace, entry])
+        for src in sources:
+            for entry in scan_tree(src, path_filter):
+                check_call(
+                    ["genstrings", "-a", "-littleEndian", "-o", workspace, entry]
+                )
         return read_strings(Path(workspace) / "Localizable.strings")
 
 
