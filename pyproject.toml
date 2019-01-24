@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pygenstrings"
-version = "19.1"
+version = "19.1.1"
 description = "Simplifies managing localization files for ObjC/Swift projects."
 authors = ["Jonas Obrist <jonas.obrist@hde.co.jp>"]
 

@@ -11,7 +11,12 @@ import chardet
 
 from .parser import parse
 
-PathFilter = Callable[[os.DirEntry[str]], bool]
+if TYPE_CHECKING:
+    DirEntry = os.DirEntry[str]
+else:
+    DirEntry = os.DirEntry
+
+PathFilter = Callable[[DirEntry], bool]
 
 
 @dataclass(frozen=True, eq=True)
