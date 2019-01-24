@@ -11,7 +11,7 @@ import chardet
 
 from .parser import parse
 
-PathFilter = Callable[[os.DirEntry], bool]
+PathFilter = Callable[[os.DirEntry[str]], bool]
 
 
 @dataclass(frozen=True, eq=True)
@@ -23,6 +23,10 @@ class LocalizableString:
 @dataclass
 class LocalizableStrings:
     strings: Dict[str, LocalizableString]
+
+    @classmethod
+    def null(cls) -> LocalizableStrings:
+        return cls({})
 
     @classmethod
     def from_source(cls, source: str) -> LocalizableStrings:
@@ -44,6 +48,8 @@ class LocalizableStrings:
 
 
 def read_file(path: Path) -> Union[str, None]:
+    if not path.exists():
+        return None
     with path.open("rb") as fobj:
         data = fobj.read()
     candidates = ["utf-8"]
@@ -63,7 +69,7 @@ def read_file(path: Path) -> Union[str, None]:
 def read_strings(path: Path) -> LocalizableStrings:
     source = read_file(path)
     if source is None:
-        raise Exception(f"Could not read file {path}")
+        return LocalizableStrings.null()
     return LocalizableStrings.from_source(source)
 
 

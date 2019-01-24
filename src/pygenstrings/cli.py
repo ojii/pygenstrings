@@ -88,12 +88,12 @@ class Config:
         )
 
 
-def null_filter(entry: os.DirEntry) -> bool:
+def null_filter(entry: os.DirEntry[str]) -> bool:
     return True
 
 
 def make_filter(exclude: List[str]) -> PathFilter:
-    def fltr(entry: os.DirEntry) -> bool:
+    def fltr(entry: os.DirEntry[str]) -> bool:
         for pat in exclude:
             if fnmatch.fnmatch(entry.path, f"*{pat}"):
                 return False
@@ -104,7 +104,10 @@ def make_filter(exclude: List[str]) -> PathFilter:
 
 def find_translations(path: Path, langs: Iterable[str]) -> Iterable[Path]:
     for lang in langs:
-        yield path / f"{lang}.lproj" / "Localizable.strings"
+        directory = path / f"{lang}.lproj"
+        if not directory.exists():
+            directory.mkdir()
+        yield directory / "Localizable.strings"
 
 
 def read_config(config_file: Optional[TextIO]) -> Optional[Dict[str, Any]]:
@@ -114,6 +117,12 @@ def read_config(config_file: Optional[TextIO]) -> Optional[Dict[str, Any]]:
     if path.exists() and path.is_file():
         with path.open("r") as fobj:
             return toml.load(fobj).get("pygenstrings", {})
+    path = Path.cwd() / "pyproject.toml"
+    if path.exists() and path.is_file():
+        with path.open("r") as fobj:
+            tools = toml.load(fobj).get("tool", {})
+            assert isinstance(tools, dict)
+            return tools.get("pygenstrings", {})
     return None
 
 

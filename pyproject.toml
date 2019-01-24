@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "pygenstrings"
-version = "0.1.0"
-description = ""
+version = "19.1"
+description = "Simplifies managing localization files for ObjC/Swift projects."
 authors = ["Jonas Obrist <jonas.obrist@hde.co.jp>"]
 
 [tool.poetry.dependencies]
@@ -13,8 +13,10 @@ toml = "^0.10.0"
 [tool.poetry.scripts]
 pygenstrings = "pygenstrings.cli:main"
 
-
 [tool.poetry.dev-dependencies]
+pytest = "^4.1"
+mypy = "^0.660.0"
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
