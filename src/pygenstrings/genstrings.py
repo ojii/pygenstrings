@@ -42,6 +42,13 @@ class LocalizableStrings:
             }
         )
 
+    def merge(self, key: str, default: LocalizableString) -> LocalizableString:
+        try:
+            current = self.strings[key]
+        except KeyError:
+            return default
+        return LocalizableString(current.string, default.comment)
+
     def to_source(self) -> str:
         lines = []
         for key, localized_string in sorted(self.strings.items()):
@@ -104,8 +111,5 @@ def merge_strings(
     strings: LocalizableStrings, translations: LocalizableStrings
 ) -> LocalizableStrings:
     return LocalizableStrings(
-        {
-            key: translations.strings.get(key, value)
-            for key, value in strings.strings.items()
-        }
+        {key: translations.merge(key, value) for key, value in strings.strings.items()}
     )
