@@ -32,3 +32,4 @@ Command line arguments override any values in the config file when given. The fo
 * `-d`/`--dst`: Root folder for the output of files. Defaults to current directory.
 * `-e`/`--exclude`: Glob-like filter of paths to exclude. Can be provided multiple times.
 * `-c`/`--config-file`: Alternative configuration file to use.
+* `--ci`: Run in CI mode. Doesn't write files and returns with a non-zero exit code.

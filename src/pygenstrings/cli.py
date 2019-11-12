@@ -139,12 +139,14 @@ def read_config(config_file: Optional[TextIO]) -> Optional[Dict[str, Any]]:
 @click.option("-l", "--lang", multiple=True)
 @click.option("-e", "--exclude", multiple=True)
 @click.option("-c", "--config-file", type=click.File(mode="r"))
+@click.option("--ci", is_flag=True)
 def main(
     src: List[str],
     dst: Optional[str],
     lang: List[str],
     exclude: List[str],
     config_file: Optional[TextIO],
+    ci: bool,
 ) -> None:
     config = Config.merge(
         sources=src,
@@ -155,12 +157,22 @@ def main(
     )
     strings = generate_strings(config.sources, config.path_filter.unbox())
     click.echo(f"Found {len(strings.strings)} strings to translate")
+    changed = 0
     for path, language in zip(
         find_translations(config.destination, config.languages), config.languages
     ):
         translation = read_strings(path)
         result = merge_strings(strings, translation)
-        with path.open("w", encoding="utf-8") as fobj:
-            fobj.write(result.to_source())
-        click.echo(f"Wrote {language}")
+        if result == translation:
+            click.echo(f"{language} unchanged")
+            continue
+        changed += 1
+        if ci:
+            click.echo(f"Would write {language}")
+        else:
+            with path.open("w", encoding="utf-8") as fobj:
+                fobj.write(result.to_source())
+            click.echo(f"Wrote {language}")
     click.echo("Done")
+    if ci and changed:
+        raise click.ClickException(f"{changed} files would be changed")

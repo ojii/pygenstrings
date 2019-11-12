@@ -48,3 +48,31 @@ def test_config_file(tmp_cwd: Path):
     assert config["sources"] == ["foo"]
     config = read_config(StringIO('[pygenstrings]\nsources=["baz"]'))
     assert config["sources"] == ["baz"]
+
+
+def test_ci_mode(tmp_path: Path):
+    src = tmp_path / "src"
+    src.mkdir()
+    swift = src / "file.swift"
+    with swift.open("w") as fobj:
+        fobj.write('func test() { NSLocalizedString("msgid", comment:"comment")}')
+    dst = tmp_path / "dst"
+    dst.mkdir()
+    lproj = dst / "ja.lproj"
+    lproj.mkdir()
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["-s", str(src), "-d", str(dst), "-l", "ja", "--ci"])
+    assert "Found 1 strings to translate" in result.output
+    assert "Would write ja" in result.output
+    assert "Done" in result.output
+    assert result.exit_code == 1
+    strings = lproj / "Localizable.strings"
+    with strings.open("w") as fobj:
+        fobj.write(f'/* comment */\n"msgid" = "";')
+    runner = CliRunner()
+    result = runner.invoke(main, ["-s", str(src), "-d", str(dst), "-l", "ja", "--ci"])
+    assert "Found 1 strings to translate" in result.output
+    assert "ja unchanged" in result.output
+    assert "Done" in result.output
+    assert result.exit_code == 0

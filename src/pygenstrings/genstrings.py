@@ -25,7 +25,7 @@ class LocalizableString:
     comment: str
 
 
-@dataclass
+@dataclass(eq=True)
 class LocalizableStrings:
     strings: Dict[str, LocalizableString]
 
